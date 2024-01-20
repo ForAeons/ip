@@ -63,13 +63,13 @@ public class Duke {
   }
 
   /**
-   * Validates the inputs for the mark command and return the task number if
-   * valid.
+   * Parses the task number from the inputs.
    *
    * @param inputs the inputs for the mark command
-   * @return task number if valid, -1 otherwise
+   * @throws BadInputException if the task number is not specified, not an integer, or out of range
+   * @return task number
    */
-  private static int validateMarkInputs(String[] inputs) throws BadInputException {
+  private static int parseTaskNumber(String[] inputs) throws BadInputException {
     if (inputs.length < 2) {
       throw new BadInputException(
         "Please specify the task number!",
@@ -106,7 +106,7 @@ public class Duke {
   }
 
   private static void markTaskAsDone(String[] inputs) {
-    int taskIndex = validateMarkInputs(inputs);
+    int taskIndex = parseTaskNumber(inputs);
 
     boolean success = taskManager.markTaskAsDone(taskIndex);
     if (!success) {
@@ -119,7 +119,7 @@ public class Duke {
   }
 
   private static void unmarkTaskAsDone(String[] inputs) {
-    int taskIndex = validateMarkInputs(inputs);
+    int taskIndex = parseTaskNumber(inputs);
 
     boolean success = taskManager.unmarkTaskAsDone(taskIndex);
     if (!success) {
