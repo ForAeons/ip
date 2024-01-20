@@ -16,6 +16,9 @@ jobs:
           java-version: "11"
           distribution: "adopt"
 
+      - name: Install dos2unix for runtest.sh
+        run: sudo apt-get install -y dos2unix
+
       - name: Change directory and Run Tests
         run: |
           cd ./text-ui-test
