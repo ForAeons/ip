@@ -4,7 +4,7 @@ echo "Testing listing tasks..."
 java -classpath ../bin Duke < ./in/list-01.txt  > ./out/list-01.txt
 cp ./expect/list-01.txt ./expect/list-01-UNIX.txt
 dos2unix ./out/list-01.txt ./expect/list-01-UNIX.txt
-diff ./out/list-01.txt ./expect/list-01-UNIX.TXT
+diff ./out/list-01.txt ./expect/list-01-UNIX.txt
 if [ $? -eq 0 ]
 then
     echo "Test listing tasks result: PASSED"
@@ -20,7 +20,7 @@ echo "Testing random permutation of commands..."
 java -classpath ../bin Duke < ./in/list-02.txt  > ./out/list-02.txt
 cp ./expect/list-02.txt ./expect/list-02-UNIX.txt
 dos2unix ./out/list-02.txt ./expect/list-02-UNIX.txt
-diff ./out/list-02.txt ./expect/list-02-UNIX.TXT
+diff ./out/list-02.txt ./expect/list-02-UNIX.txt
 if [ $? -eq 0 ]
 then
     echo "Test random permutation of commands result: PASSED"
@@ -33,7 +33,7 @@ fi
 java -classpath ../bin Duke < ./in/list-03.txt  > ./out/list-03.txt
 cp ./expect/list-03.txt ./expect/list-03-UNIX.txt
 dos2unix ./out/list-03.txt ./expect/list-03-UNIX.txt
-diff ./out/list-03.txt ./expect/list-03-UNIX.TXT
+diff ./out/list-03.txt ./expect/list-03-UNIX.txt
 if [ $? -eq 0 ]
 then
     echo "Test random permutation of commands result: PASSED"
@@ -46,7 +46,7 @@ fi
 java -classpath ../bin Duke < ./in/list-04.txt  > ./out/list-04.txt
 cp ./expect/list-04.txt ./expect/list-04-UNIX.txt
 dos2unix ./out/list-04.txt ./expect/list-04-UNIX.txt
-diff ./out/list-04.txt ./expect/list-04-UNIX.TXT
+diff ./out/list-04.txt ./expect/list-04-UNIX.txt
 if [ $? -eq 0 ]
 then
     echo "Test random permutation of commands result: PASSED"
