@@ -66,6 +66,15 @@ public class AddTaskCommand extends Command {
 
           java.time.LocalDate startDate = Parser.parseDate(eventDetails[1]);
           java.time.LocalDate endDate = Parser.parseDate(eventDetails[2]);
+
+          if (startDate.isAfter(endDate)) {
+            throw new BadTaskInputException(
+              "Start date cannot be after end date.",
+              "event <description> /from <start date> /to <end date>",
+              "fun event /from 2019-12-1 /to 2019-12-15",
+              this.description);
+          }
+
           task = tm.addEventTask(eventDetails[0],startDate, endDate);
           break;
 
