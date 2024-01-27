@@ -16,9 +16,9 @@ public abstract class Command {
         return new UnmarkTaskCommand(parser.parseTaskID());
       case DeleteTaskCommand.COMMAND_WORD:
         return new DeleteTaskCommand(parser.parseTaskID());
-      case TaskManager.todo:
-      case TaskManager.deadline:
-      case TaskManager.event:
+      case AddTaskCommand.ADD_TODO_COMMAND:
+      case AddTaskCommand.ADD_DEADLINE_COMMAND:
+      case AddTaskCommand.ADD_EVENT_COMMAND:
         return new AddTaskCommand(parser.command, parser.arguments);
       case ExitCommand.COMMAND_WORD:
         return new ExitCommand();

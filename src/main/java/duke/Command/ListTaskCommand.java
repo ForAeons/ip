@@ -10,11 +10,10 @@ public class ListTaskCommand extends Command {
 
   @Override
   public String execute(TaskManager tm) {
-    if (tm.getNumberOfTasks() == 0) {
-      return "No tasks added yet!\n";
-    }
-
     try {
+      if (tm.getNumberOfTasks() == 0) {
+        return "No tasks added yet!\n";
+      }
       StringBuilder sb = new StringBuilder();
       for (Task task :tm.getTasks()) {
         sb.append(String.format("%d. %s\n", task.taskID, task));

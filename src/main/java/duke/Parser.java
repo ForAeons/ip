@@ -11,7 +11,7 @@ public class Parser {
     if (inputParts.length < 1) {
       throw new BadInputException(
         "Please enter a command!",
-        "list, mark, unmark, todo, deadline, event, bye",
+        "list, mark, unmark, todo, deadline, event, delete, bye",
         null,
         null
       );
@@ -50,5 +50,18 @@ public class Parser {
     }
 
     return taskID;
+  }
+
+  public static java.time.LocalDate parseDate(String dateString) throws BadInputException {
+    try {
+      return java.time.LocalDate.parse(dateString);
+    } catch (java.time.format.DateTimeParseException e) {
+      throw new BadInputException(
+        "Date must be in the format YYYY-MM-DD!",
+        null,
+        "2020-01-01",
+        dateString
+      );
+    }
   }
 }

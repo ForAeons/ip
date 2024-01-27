@@ -15,7 +15,13 @@ public class Main {
     }
 
     Duke app = new Duke("Aiken Dueet");
-    app.run();
+
+    try {
+      app.run();
+    } catch (Exception e) {
+      System.out.println("Something went wrong while running the app:");
+      System.out.println(e.getMessage());
+    }
 
     database.DB.disconnect();
   }
