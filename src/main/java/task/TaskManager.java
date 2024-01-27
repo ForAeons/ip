@@ -49,20 +49,18 @@ public class TaskManager {
         return this.addEventTask(eventDetails[0], eventDetails[1], eventDetails[2]);
 
       default:
-        return this.addTask(type + details);
+        throw new IllegalArgumentException("Invalid task type: " + type);
     }
   }
 
-  public Task addTask(String description) {
-    Task task = new Task(description);
-    this.tasks.add(task);
-    return task;
-  }
-
   public Task addTodoTask(String description) {
-    Task task = new Todo(description);
-    this.tasks.add(task);
-    return task;
+    String sql = "INSERT INTO tasks (type, description) VALUES (\"todo\", ?)";
+    try {
+      database.DB.execute(sql,  description);
+    } catch (java.sql.SQLException e) {
+      System.out.println(e.getMessage());
+    }
+    return new Todo(description);
   }
 
   public Task addDeadlineTask(String description, String deadline) {
