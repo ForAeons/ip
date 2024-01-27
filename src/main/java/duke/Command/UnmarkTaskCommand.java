@@ -15,11 +15,6 @@ public class UnmarkTaskCommand extends Command{
   public String execute(TaskORM tm) {
     try {
       tm.unmark(taskID);
-    } catch (SQLException e) {
-      return e.getMessage();
-    }
-
-    try {
       task.Task task = tm.get(taskID);
       return "Ok, I've marked this task as not done yet:\n" + "  " + task + "\n";
     } catch (SQLException e) {

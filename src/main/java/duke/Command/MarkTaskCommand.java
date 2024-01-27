@@ -15,11 +15,6 @@ public class MarkTaskCommand extends Command{
   public String execute(TaskORM tm) {
     try {
       tm.mark(taskID);
-    } catch (SQLException e) {
-      return e.getMessage();
-    }
-
-    try {
       task.Task task = tm.get(taskID);
       return "Nice! I've marked this task as done:\n" + "  " + task + "\n";
     } catch (SQLException e) {
