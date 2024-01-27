@@ -1,13 +1,27 @@
 package duke.Command;
 
+import task.Task;
+import task.TaskManager;
+
+import java.sql.SQLException;
+
 public class ListTaskCommand extends Command {
   public static final String COMMAND_WORD = "list";
 
   @Override
-  public String execute() {
-    return "Here are the tasks in your list:\n" +
-      "1. [T][ ] read book\n" +
-      "2. [D][ ] return book (by: June 6th)\n" +
-      "3. [E][ ] project meeting (at: Aug 6th 2-4pm)";
+  public String execute(TaskManager tm) {
+    if (tm.getNumberOfTasks() == 0) {
+      return "No tasks added yet!\n";
+    }
+
+    try {
+      StringBuilder sb = new StringBuilder();
+      for (Task task :tm.getTasks()) {
+        sb.append(String.format("%d. %s\n", task.taskID, task));
+      }
+      return sb.toString();
+    } catch (SQLException e) {
+      return e.getMessage();
+    }
   }
 }

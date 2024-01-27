@@ -1,24 +1,26 @@
 package duke.Command;
 
-public abstract class Command {
+import duke.Parser;
+import task.TaskManager;
 
+public abstract class Command {
   public static Command Interpret(String input) {
     Parser parser = new Parser(input);
 
     switch (parser.command) {
-      case "list":
+      case ListTaskCommand.COMMAND_WORD:
         return new ListTaskCommand();
-      case "mark":
+      case MarkTaskCommand.COMMAND_WORD:
         return new MarkTaskCommand(parser.parseTaskID());
-      case "unmark":
+      case UnmarkTaskCommand.COMMAND_WORD:
         return new UnmarkTaskCommand(parser.parseTaskID());
-      case "delete":
+      case DeleteTaskCommand.COMMAND_WORD:
         return new DeleteTaskCommand(parser.parseTaskID());
-      case "todo":
-      case "deadline":
-      case "event":
+      case TaskManager.todo:
+      case TaskManager.deadline:
+      case TaskManager.event:
         return new AddTaskCommand(parser.command, parser.arguments);
-      case "bye":
+      case ExitCommand.COMMAND_WORD:
         return new ExitCommand();
       default:
         return new UnknownCommand(parser.command);
@@ -30,7 +32,7 @@ public abstract class Command {
    *
    * @return the output of the command that will be printed to the user
    */
-  public abstract String execute();
+  public abstract String execute(TaskManager tm);
 
   /**
    * Checks if the command is a termination command.

@@ -1,4 +1,4 @@
-package duke.Command;
+package duke;
 
 import exceptions.BadInputException;
 
