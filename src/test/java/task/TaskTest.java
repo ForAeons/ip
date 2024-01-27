@@ -1,7 +1,7 @@
+package task;
+
 import static org.junit.jupiter.api.Assertions.*;
 import org.junit.jupiter.api.Test;
-
-import task.*;
 
 public class TaskTest {
   @Test
@@ -11,6 +11,20 @@ public class TaskTest {
 
     Task task2 = new Task("test task", true);
     assertEquals("[X] test task", task2.toString());
+  }
+
+  @Test
+  public void testTaskGetDetails() {
+    Task task = new Task("test task");
+    assertEquals("test task", task.getDetails());
+  }
+
+  @Test void testTaskToggleDone() {
+    Task task = new Task("test task");
+    task.toggleDone();
+    assertEquals("[X] test task", task.toString());
+    task.toggleDone();
+    assertEquals("[ ] test task", task.toString());
   }
 
   @Test

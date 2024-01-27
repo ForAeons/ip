@@ -1,43 +1,71 @@
 package database;
 
+import java.io.File;
 import java.sql.*;
-import java.util.ArrayList;
 
-public class SQLiteDriverConnection {
-  public static Connection connection;
-  public static void connect() {
+public class DB {
+  public static Connection conn;
+  public static void connect() throws SQLException {
     String connectionUrl = config.config.dbConnectionUrl;
-    try {
-      connection = DriverManager.getConnection(connectionUrl);
-    } catch (SQLException e) {
-      throw new RuntimeException(e.getMessage()); // we should not continue if we cannot connect to the database
+
+    String[] connectionUrlParts = connectionUrl.split("/");
+    String databaseFolderName = connectionUrlParts[1];
+
+    java.io.File databaseFolder = new java.io.File("."+File.separator+databaseFolderName);
+    if (!databaseFolder.exists()) {
+      databaseFolder.mkdir();
     }
+
+    conn = DriverManager.getConnection(connectionUrl);
   }
 
   public static void disconnect() {
     try {
-      connection.close();
+      conn.close();
     } catch (SQLException e) {
       System.out.println(e.getMessage());
     }
   }
 
-  public static void execute(String sql) {
-    try {
-      Statement stmt = connection.createStatement();
-      stmt.execute(sql);
-    } catch (SQLException e) {
-      System.out.println(e.getMessage());
-    }
+  public static void execute(String sql) throws SQLException {
+    Statement stmt = conn.createStatement();
+    stmt.execute(sql);
   }
 
-  public static ResultSet select(String sql) {
-    try {
-      Statement stmt = connection.createStatement();
-      stmt.execute(sql);
-      return stmt.getResultSet();
-    } catch (SQLException e) {
-      System.out.println(e.getMessage());
+  public static void execute(String sql, String... values) throws SQLException {
+    PreparedStatement pstmt = conn.prepareStatement(sql);
+    for (int i = 0; i < values.length; i++) {
+      pstmt.setString(i + 1, values[i]);
     }
+    pstmt.executeUpdate();
+  }
+
+  public static ResultSet select(String sql) throws SQLException {
+    Statement stmt = conn.createStatement();
+    stmt.execute(sql);
+    return stmt.getResultSet();
+  }
+
+  public static ResultSet select(String sql, String... values) throws SQLException {
+    PreparedStatement pstmt = conn.prepareStatement(sql);
+    for (int i = 0; i < values.length; i++) {
+      pstmt.setString(i + 1, values[i]);
+    }
+    pstmt.execute();
+    return pstmt.getResultSet();
+  }
+
+  public static void AutoMigrate() throws SQLException {
+    String sql = "CREATE TABLE IF NOT EXISTS tasks (" +
+      "id INTEGER PRIMARY KEY AUTOINCREMENT," +
+      "type TEXT NOT NULL," +
+      "description TEXT NOT NULL," +
+      "deadline TEXT," +
+      "startDate TEXT," +
+      "endDate TEXT," +
+      "isDone INTEGER DEFAULT 0" +
+      ");";
+
+    DB.execute(sql);
   }
 }

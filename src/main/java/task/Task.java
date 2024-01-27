@@ -1,3 +1,5 @@
+package task;
+
 public class Task {
   protected final String description;
   protected boolean isDone = false;
@@ -6,20 +8,21 @@ public class Task {
     this.description = description;
   }
 
+  public Task(String description, boolean isDone) {
+    this.description = description;
+    this.isDone = isDone;
+  }
+
   public String getDetails() {
     return this.description;
   }
 
-  public void toggleDone() {
-    this.isDone = !this.isDone;
-  }
-
-  public boolean isDone() {
-    return this.isDone;
-  }
-
   public String getStatusIcon() {
     return this.isDone ? "X" : " ";
+  }
+
+  public void toggleDone() {
+    this.isDone = !this.isDone;
   }
 
   @Override
