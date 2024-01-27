@@ -1,8 +1,10 @@
-import config.config;
 import java.sql.*;
+import config.Config;
+import duke.Duke;
+
 public class Main {
   public static void main(String[] args) {
-    config.loadEnv();
+    Config.loadEnv();
 
     try {
       database.DB.connect();

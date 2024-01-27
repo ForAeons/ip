@@ -1,5 +1,10 @@
+package duke;
+
 import java.sql.SQLException;
 import java.util.Scanner;
+
+import duke.Command.Command;
+import duke.Command.Parser;
 import exceptions.BadInputException;
 import exceptions.BadTaskInputException;
 import exceptions.UnknownCommandException;
@@ -39,19 +44,9 @@ public class Duke {
     this.printHorizontalln();
   }
 
-  private void addTask(String... inputs) throws BadInputException {
-    String type = inputs[0];
-
-    StringBuilder details = new StringBuilder();
-    for (int i = 1; i < inputs.length; i++) {
-      details.append(inputs[i]);
-      if (i != inputs.length - 1) {
-        details.append(" ");
-      }
-    }
-
+  private void addTask(String command, String arguments) throws BadInputException {
     try {
-      Task task = this.taskManager.addTask(type, details.toString());
+      Task task = this.taskManager.addTask(command, arguments);
       this.printIndentedln("Got it. I've added this task:");
       this.printIndentedln("  " + task);
       this.printIndentedln(String.format("Now you have %d tasks in the list.", taskManager.getNumberOfTasks()));
@@ -60,21 +55,15 @@ public class Duke {
     }
   }
 
-  private  void deleteTask(String... inputs) {
-    int taskIndex = parseTaskNumber(inputs);
-
-    Task task;
-
+  private  void deleteTask(int taskID) {
     try {
-      task = this.taskManager.deleteTask(taskIndex);
+      Task task = this.taskManager.deleteTask(taskID);
+      this.printIndentedln("Noted. I've removed this task:");
+      this.printIndentedln("  " + task);
+      this.printIndentedln(String.format("Now you have %d tasks in the list.", taskManager.getNumberOfTasks()));
     } catch (SQLException e) {
       System.out.println(e.getMessage());
-      return;
     }
-
-    this.printIndentedln("Noted. I've removed this task:");
-    this.printIndentedln("  " + task);
-    this.printIndentedln(String.format("Now you have %d tasks in the list.", taskManager.getNumberOfTasks()));
   }
 
   private void listTasks() {
@@ -92,51 +81,16 @@ public class Duke {
     }
   }
 
-  /**
-   * Parses the task number from the inputs.
-   *
-   * @param inputs the inputs for the mark command
-   * @throws BadInputException if the task number is not specified, not an integer, or out of range
-   * @return task number
-   */
-  private int parseTaskNumber(String[] inputs) throws BadInputException {
-    if (inputs.length < 2) {
-      throw new BadInputException(
-        "Please specify the task number!",
-        String.format("%s <task number>", inputs[0]),
-        String.format("%s 1", inputs[0]),
-        null
-      );
-    }
-
-    int taskID;
-
+  private void markTaskAsDone(int taskID) {
     try {
-      taskID = Integer.parseInt(inputs[1]);
-    } catch (NumberFormatException e) {
-      throw new BadInputException(
-        "Task number must be an integer!",
-        String.format("%s <task number>", inputs[0]),
-        String.format("%s 1", inputs[0]),
-        inputs[1]
-      );
-    }
-
-    return taskID;
-  }
-
-  private void markTaskAsDone(String[] inputs) {
-    int taskIndex = this.parseTaskNumber(inputs);
-
-    try {
-      this.taskManager.markTaskAsDone(taskIndex);
+      this.taskManager.markTaskAsDone(taskID);
     } catch (SQLException e) {
       System.out.println(e.getMessage());
       return;
     }
 
     try {
-      Task task = this.taskManager.getTask(taskIndex);
+      Task task = this.taskManager.getTask(taskID);
       this.printIndentedln("Nice! I've marked this task as done:");
       this.printIndentedln("  " + task);
     } catch (SQLException e) {
@@ -144,18 +98,16 @@ public class Duke {
     }
   }
 
-  private  void unmarkTaskAsDone(String[] inputs) {
-    int taskIndex = this.parseTaskNumber(inputs);
-
+  private  void unmarkTaskAsDone(int taskID) {
     try {
-      this.taskManager.unmarkTaskAsDone(taskIndex);
+      this.taskManager.unmarkTaskAsDone(taskID);
     } catch (SQLException e) {
       System.out.println(e.getMessage());
       return;
     }
 
     try {
-      Task task = this.taskManager.getTask(taskIndex);
+      Task task = this.taskManager.getTask(taskID);
       this.printIndentedln("Ok, I've marked this task as not done yet:");
       this.printIndentedln("  " + task);
     } catch (SQLException e) {
@@ -163,40 +115,31 @@ public class Duke {
     }
   }
 
-  private void evaluateInputs(String[] inputs) throws RuntimeException {
-    if (inputs.length == 0) {
-      throw new BadInputException(
-        "Please enter a command!",
-        "list, mark, unmark, todo, deadline, event, bye",
-        null,
-        null
-      );
-    }
+  private void evaluateInput(String input) throws RuntimeException {
+    Parser parser = new Parser(input);
 
-    String command = inputs[0];
-
-    switch (command) {
+    switch (parser.command) {
       case "list":
         this.listTasks();
         break;
       case "mark":
-        this.markTaskAsDone(inputs);
+        this.markTaskAsDone(parser.parseTaskID());
         break;
       case "unmark":
-        this.unmarkTaskAsDone(inputs);
+        this.unmarkTaskAsDone(parser.parseTaskID());
         break;
       case "delete":
-        this.deleteTask(inputs);
+        this.deleteTask(parser.parseTaskID());
         break;
       case TaskManager.todo:
       case TaskManager.deadline:
       case TaskManager.event:
-        this.addTask(inputs);
+        this.addTask(parser.command, parser.arguments);
         break;
       default:
         throw new UnknownCommandException(
           "I'm sorry, but I don't know what that means :-(",
-          inputs[0],
+          parser.command,
           "list", "mark", "unmark", "todo", "deadline", "event", "bye"
         );
     }
@@ -208,23 +151,15 @@ public class Duke {
     while (true) {
       String input = sc.nextLine();
 
-      if (input.equals("bye")) {
+      Command c = Command.Interpret(input);
+
+      if (c.terminate()) {
         break;
       }
 
-      String[] inputs = input.split(" ", 2);
-
-      this.printHorizontalln();
-
-      try {
-        this.evaluateInputs(inputs);
-      } catch (RuntimeException e) {
-        System.out.printf("Something went wrong:\n%s", e.getMessage());
-      }
-
-      this.printHorizontalln();
+      String output = c.execute();
+      view.PrettyPrinter.print(output);
     }
-
     sc.close();
   }
 
