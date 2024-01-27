@@ -4,7 +4,7 @@ import java.io.File;
 import java.sql.*;
 
 public class DB {
-  public static Connection conn;
+  private static Connection conn;
   public static void connect() throws SQLException {
     String connectionUrl = config.config.dbConnectionUrl;
 
@@ -27,17 +27,34 @@ public class DB {
     }
   }
 
-  public static void execute(String sql) throws SQLException {
+  public static ResultSet execute(String sql) throws SQLException {
     Statement stmt = conn.createStatement();
     stmt.execute(sql);
+    return stmt.getResultSet();
   }
 
-  public static void execute(String sql, String... values) throws SQLException {
+  public static ResultSet execute(String sql, String... values) throws SQLException {
     PreparedStatement pstmt = conn.prepareStatement(sql);
     for (int i = 0; i < values.length; i++) {
       pstmt.setString(i + 1, values[i]);
     }
     pstmt.executeUpdate();
+    return pstmt.getResultSet();
+  }
+
+  public static ResultSet insert(String sql) throws SQLException {
+    Statement stmt = conn.createStatement();
+    stmt.execute(sql);
+    return stmt.getGeneratedKeys();
+  }
+
+  public static ResultSet insert(String sql, String... values) throws SQLException {
+    PreparedStatement pstmt = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS);
+    for (int i = 0; i < values.length; i++) {
+      pstmt.setString(i + 1, values[i]);
+    }
+    pstmt.executeUpdate();
+    return pstmt.getGeneratedKeys();
   }
 
   public static ResultSet select(String sql) throws SQLException {

@@ -4,12 +4,12 @@ import task.Task;
 
 public class Todo extends Task {
   public static final String type = "T";
-  public Todo(String description) {
-    super(description);
+  public Todo(int taskID, String description) {
+    super( taskID, description);
   }
 
-  public Todo(String description, boolean isDone) {
-    super(description, isDone);
+  public Todo(int taskID,  String description, boolean isDone) {
+    super(taskID, description, isDone);
   }
 
   @Override

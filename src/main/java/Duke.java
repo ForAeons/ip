@@ -1,5 +1,8 @@
+import java.sql.SQLException;
+import java.util.ArrayList;
 import java.util.Scanner;
 import exceptions.BadInputException;
+import exceptions.BadTaskInputException;
 import exceptions.UnknownCommandException;
 import task.*;
 
@@ -48,17 +51,27 @@ public class Duke {
       }
     }
 
-    Task task = this.taskManager.addTask(type, details.toString());
-
-    this.printIndentedln("Got it. I've added this task:");
-    this.printIndentedln("  " + task);
-    this.printIndentedln(String.format("Now you have %d tasks in the list.", taskManager.getNumberOfTasks()));
+    try {
+      Task task = this.taskManager.addTask(type, details.toString());
+      this.printIndentedln("Got it. I've added this task:");
+      this.printIndentedln("  " + task);
+      this.printIndentedln(String.format("Now you have %d tasks in the list.", taskManager.getNumberOfTasks()));
+    } catch (SQLException | BadTaskInputException e) {
+      System.out.println(e.getMessage());
+    }
   }
 
   private  void deleteTask(String... inputs) {
     int taskIndex = parseTaskNumber(inputs);
 
-    Task task = this.taskManager.deleteTask(taskIndex);
+    Task task;
+
+    try {
+      task = this.taskManager.deleteTask(taskIndex);
+    } catch (SQLException e) {
+      System.out.println(e.getMessage());
+      return;
+    }
 
     this.printIndentedln("Noted. I've removed this task:");
     this.printIndentedln("  " + task);
@@ -71,9 +84,12 @@ public class Duke {
       return;
     }
 
-    int i = 1;
-    for (Task task : this.taskManager.getTasks()) {
-      this.printIndentedln(String.format("%d. %s", i++, task));
+    try {
+      for (Task task : this.taskManager.getTasks()) {
+        this.printIndentedln(String.format("%d. %s", task.taskID, task));
+      }
+    } catch (SQLException e) {
+      System.out.println(e.getMessage());
     }
   }
 
@@ -94,11 +110,10 @@ public class Duke {
       );
     }
 
-    int taskIndex;
+    int taskID;
 
     try {
-      int taskNumber = Integer.parseInt(inputs[1]);
-      taskIndex = taskNumber - 1;
+      taskID = Integer.parseInt(inputs[1]);
     } catch (NumberFormatException e) {
       throw new BadInputException(
         "Task number must be an integer!",
@@ -108,42 +123,45 @@ public class Duke {
       );
     }
 
-    if (taskIndex < 0 || taskIndex >= this.taskManager.getNumberOfTasks()) {
-      throw new BadInputException(
-        "Task number out of range!",
-        String.format("%s <task number>", inputs[0]),
-        String.format("%s 1", inputs[0]),
-        inputs[1]
-      );
-    }
-
-    return taskIndex;
+    return taskID;
   }
 
   private void markTaskAsDone(String[] inputs) {
     int taskIndex = this.parseTaskNumber(inputs);
 
-    boolean success = this.taskManager.markTaskAsDone(taskIndex);
-    if (!success) {
-      printIndentedln("Task is already done!");
+    try {
+      this.taskManager.markTaskAsDone(taskIndex);
+    } catch (SQLException e) {
+      System.out.println(e.getMessage());
       return;
     }
 
-    this.printIndentedln("Nice! I've marked this task as done:");
-    this.printIndentedln("  " + taskManager.getTask(taskIndex));
+    try {
+      Task task = this.taskManager.getTask(taskIndex);
+      this.printIndentedln("Nice! I've marked this task as done:");
+      this.printIndentedln("  " + task);
+    } catch (SQLException e) {
+      System.out.println(e.getMessage());
+    }
   }
 
   private  void unmarkTaskAsDone(String[] inputs) {
     int taskIndex = this.parseTaskNumber(inputs);
 
-    boolean success = this.taskManager.unmarkTaskAsDone(taskIndex);
-    if (!success) {
-      this.printIndentedln("Task is not done yet!");
+    try {
+      this.taskManager.unmarkTaskAsDone(taskIndex);
+    } catch (SQLException e) {
+      System.out.println(e.getMessage());
       return;
     }
 
-    this.printIndentedln("Ok, I've marked this task as not done yet:");
-    this.printIndentedln("  " + taskManager.getTask(taskIndex));
+    try {
+      Task task = this.taskManager.getTask(taskIndex);
+      this.printIndentedln("Ok, I've marked this task as not done yet:");
+      this.printIndentedln("  " + task);
+    } catch (SQLException e) {
+      System.out.println(e.getMessage());
+    }
   }
 
   private void evaluateInputs(String[] inputs) throws RuntimeException {
@@ -158,29 +176,22 @@ public class Duke {
 
     String command = inputs[0];
 
-    System.out.println(command);
-
     switch (command) {
       case "list":
-        System.out.println("running list");
         this.listTasks();
         break;
       case "mark":
-        System.out.println("running mark");
         this.markTaskAsDone(inputs);
         break;
       case "unmark":
-        System.out.println("running unmark");
         this.unmarkTaskAsDone(inputs);
         break;
       case "delete":
-        System.out.println("running delete");
         this.deleteTask(inputs);
         break;
-      case "todo":
-      case "deadline":
-      case "event":
-        System.out.println("running add");
+      case TaskManager.todo:
+      case TaskManager.deadline:
+      case TaskManager.event:
         this.addTask(inputs);
         break;
       default:

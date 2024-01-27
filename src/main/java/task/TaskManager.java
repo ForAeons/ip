@@ -5,21 +5,25 @@ import java.util.ArrayList;
 import exceptions.BadTaskInputException;
 
 public class TaskManager {
-  public Task addTask(String type, String details) throws BadTaskInputException {
+  public static final String todo = "todo";
+  public static final String deadline = "deadline";
+  public static final String event = "event";
+
+  public Task addTask(String type, String details) throws BadTaskInputException, SQLException {
     switch (type) {
-      case "todo":
+      case todo:
         if (details == null || details.isEmpty()) {
           throw new BadTaskInputException(
             "Details of a todo cannot be empty.",
             "todo <description>",
             "todo read book",
-           details
+            details
           );
         }
 
         return this.addTodoTask(details);
 
-      case "deadline":
+      case deadline:
         String[] deadlineDetails = details.split(" /by ");
 
         if (deadlineDetails.length < 2) {
@@ -33,7 +37,7 @@ public class TaskManager {
 
         return this.addDeadlineTask(deadlineDetails[0], deadlineDetails[1]);
 
-      case "event":
+      case event:
         String[] eventDetails = details.split(" /from | /to ");
 
         if (eventDetails.length < 3) {
@@ -51,34 +55,31 @@ public class TaskManager {
     }
   }
 
-  public Task addTodoTask(String description) {
+  public Task addTodoTask(String description) throws SQLException {
     String sql = "INSERT INTO tasks (type, description) VALUES (?, ?)";
-    try {
-      database.DB.execute(sql, Todo.type, description);
-    } catch (java.sql.SQLException e) {
-      System.out.println(e.getMessage());
-    }
-    return new Todo(description);
+
+    ResultSet rs = database.DB.insert(sql, Todo.type, description);
+    int id = rs.getInt(1);
+
+    return new Todo(id, description);
   }
 
-  public Task addDeadlineTask(String description, String deadline) {
+  public Task addDeadlineTask(String description, String deadline) throws SQLException {
     String sql = "INSERT INTO tasks (type, description, deadline) VALUES (?, ?, ?)";
-    try {
-      database.DB.execute(sql, Deadline.type, description, deadline);
-    } catch (java.sql.SQLException e) {
-      System.out.println(e.getMessage());
-    }
-    return new Deadline(description, deadline);
+
+    ResultSet rs = database.DB.insert(sql, Deadline.type, description, deadline);
+    int id = rs.getInt(1);
+
+    return new Deadline(id, description, deadline);
   }
 
-  public Task addEventTask(String description, String startDate, String endDate) {
+  public Task addEventTask(String description, String startDate, String endDate) throws SQLException {
     String sql = "INSERT INTO tasks (type, description, startDate, endDate) VALUES (?, ?, ?, ?)";
-    try {
-      database.DB.execute(sql, Event.type, description, startDate, endDate);
-    } catch (java.sql.SQLException e) {
-      System.out.println(e.getMessage());
-    }
-    return new Event(description, startDate, endDate);
+
+    ResultSet rs = database.DB.insert(sql, Event.type, description, startDate, endDate);
+    int id = rs.getInt(1);
+
+    return new Event(id, description, startDate, endDate);
   }
 
   /**
@@ -87,97 +88,43 @@ public class TaskManager {
    * @param taskID the index of the task to be marked as done
    * @return true if the task is successfully marked as done, false otherwise
    */
-  public boolean markTaskAsDone(int taskID) {
-    boolean isDone = false;
-
-    String sql = "SELECT isDone FROM tasks WHERE id = ?";
-    try {
-      ResultSet rs = database.DB.select(sql, String.valueOf(taskID + 1));
-      if (rs.next()) {
-        isDone = rs.getBoolean("isDone");
-      }
-    } catch (java.sql.SQLException e) {
-      System.out.println(e.getMessage());
-      return false;
-    }
-
-    if (isDone) {
-      return false;
-    }
-
-    sql = "UPDATE tasks SET isDone = 1 WHERE id = ?";
-    try {
-      database.DB.execute(sql, String.valueOf(taskID + 1));
-    } catch (java.sql.SQLException e) {
-      System.out.println(e.getMessage());
-      return false;
-    }
-
-    return true;
+  public void markTaskAsDone(int taskID) throws SQLException {
+    checkTaskExists(taskID);
+    String sql = "UPDATE tasks SET isDone = 1 WHERE id = ?";
+    database.DB.execute(sql, String.valueOf(taskID));
   }
 
   /**
    * Unmarks the task as done.
    *
    * @param taskID the index of the task to be unmarked as done
-   * @return true if the task is successfully unmarked as done, false otherwise
    */
-  public boolean unmarkTaskAsDone(int taskID) {
-    boolean isDone = false;
-
-    String sql = "SELECT isDone FROM tasks WHERE id = ?";
-    try {
-      ResultSet rs = database.DB.select(sql, String.valueOf(taskID + 1));
-      if (rs.next()) {
-        isDone = rs.getBoolean("isDone");
-      }
-    } catch (java.sql.SQLException e) {
-      System.out.println(e.getMessage());
-      return false;
-    }
-
-    if (!isDone) {
-      return false;
-    }
-
-    sql = "UPDATE tasks SET isDone = 0 WHERE id = ?";
-    try {
-      database.DB.execute(sql, String.valueOf(taskID + 1));
-    } catch (java.sql.SQLException e) {
-      System.out.println(e.getMessage());
-      return false;
-    }
-
-    return true;
+  public void unmarkTaskAsDone(int taskID) throws SQLException {
+    checkTaskExists(taskID);
+    String sql = "UPDATE tasks SET isDone = 0 WHERE id = ?";
+    database.DB.execute(sql, String.valueOf(taskID));
   }
 
-  public Task deleteTask(int taskID) {
+  public Task deleteTask(int taskID) throws SQLException {
     Task task = this.getTask(taskID);
 
     String sql = "DELETE FROM tasks WHERE id = ?";
-    try {
-      database.DB.execute(sql, String.valueOf(taskID + 1));
-    } catch (java.sql.SQLException e) {
-      System.out.println(e.getMessage());
-    }
+    database.DB.execute(sql, String.valueOf(taskID));
 
     return task;
   }
 
-  public Task getTask(int taskNumber) {
+  public Task getTask(int taskID) throws SQLException {
     String sql = "SELECT * FROM tasks WHERE id = ?";
 
-    try {
-      ResultSet rs = database.DB.select(sql, String.valueOf(taskNumber + 1));
-      if (rs.next()) {
-        return this.sqlRowToTask(rs);
-      }
-    } catch (java.sql.SQLException e) {
-      System.out.println(e.getMessage());
+    ResultSet rs = database.DB.select(sql, String.valueOf(taskID));
+    if (rs.next()) {
+      return this.sqlRowToTask(rs);
+    } else {
+      throw new SQLException("Task not found");
     }
-
-    return null;
   }
+
 
   public int getNumberOfTasks() {
     String sql = "SELECT COUNT(*) FROM tasks";
@@ -193,24 +140,43 @@ public class TaskManager {
     return -1;
   }
 
-  public ArrayList<Task> getTasks() {
+  public ArrayList<Task> getTasks() throws SQLException {
     ArrayList<Task> tasks = new ArrayList<>();
 
     String sql = "SELECT * FROM tasks";
-    try {
-      ResultSet rs = database.DB.select(sql);
-      while (rs.next()) {
-        tasks.add(this.sqlRowToTask(rs));
-      }
-      return tasks;
-    } catch (java.sql.SQLException e) {
-      System.out.println(e.getMessage());
+    ResultSet rs = database.DB.select(sql);
+    while (rs.next()) {
+      tasks.add(this.sqlRowToTask(rs));
     }
 
-    return null;
+    return tasks;
+  }
+
+
+  public boolean isTaskDone(int taskID) throws SQLException {
+    String sql = "SELECT isDone FROM tasks WHERE id = ?";
+    ResultSet rs = database.DB.select(sql, String.valueOf(taskID));
+
+    if (rs.next()) {
+      return rs.getBoolean("isDone");
+    } else {
+      throw new SQLException("Task not found");
+    }
+  }
+
+  private void checkTaskExists(int taskID) throws SQLException {
+    String sql = "SELECT COUNT(*) FROM tasks WHERE id = ?";
+    ResultSet rs = database.DB.select(sql, String.valueOf(taskID ));
+
+    if (!rs.next()) {
+      throw new SQLException("Task not found");
+    } else if (rs.getInt(1) == 0) {
+      throw new SQLException("Task not found");
+    }
   }
 
   private Task sqlRowToTask(ResultSet rs) throws SQLException {
+    int id = rs.getInt("id");
     String type = rs.getString("type");
     String description = rs.getString("description");
     String deadline = rs.getString("deadline");
@@ -221,17 +187,20 @@ public class TaskManager {
     switch (type) {
       case Todo.type:
         return new Todo(
+          id,
           description,
           isDone
         );
       case Deadline.type:
         return new Deadline(
+          id,
           description,
           deadline,
           isDone
         );
       case Event.type:
         return new Event(
+          id,
           description,
           startDate,
           endDate,

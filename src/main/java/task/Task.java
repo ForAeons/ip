@@ -1,14 +1,18 @@
 package task;
 
 public class Task {
+
+  public int taskID;
   protected final String description;
   protected boolean isDone = false;
 
-  public Task(String description) {
+  public Task(int taskID, String description) {
+    this.taskID = taskID;
     this.description = description;
   }
 
-  public Task(String description, boolean isDone) {
+  public Task(int taskID,String description, boolean isDone) {
+    this.taskID = taskID;
     this.description = description;
     this.isDone = isDone;
   }
